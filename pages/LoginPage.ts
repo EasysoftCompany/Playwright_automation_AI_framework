@@ -71,4 +71,14 @@ export class LoginPage {
   async expectLoginError(): Promise<void> {
     await expect(this.errorMessage).toBeVisible();
   }
+
+    /**
+   * TC-06: the error banner alone is not enough — the app must also NOT have
+   * established a session. Without this, a test asserting "does not
+   * authenticate" would pass even if the app showed the error AND logged in.
+   */
+  async expectNotAuthenticated(): Promise<void> {
+    await expect(this.page).toHaveURL(/signin|login/i);
+    await expect(this.signInButton).toBeVisible();
+  }
 }
