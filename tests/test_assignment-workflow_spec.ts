@@ -128,7 +128,7 @@ test.describe('Login', () => {
     await loginPage.goto();
     await loginPage.login(
       process.env.NEWSELA_USERNAME ?? 'qe.demo.teacher',
-      'wrong-password-123',
+      'wrong-password-1234',
     );
     await loginPage.expectLoginError();
   });
