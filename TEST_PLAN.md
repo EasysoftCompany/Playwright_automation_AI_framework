@@ -1,6 +1,6 @@
 # Test Plan — Newsela Assignment Creation Workflow
 
-**Author:** Gerardo [Last Name]
+**Author:** Gerardo Rico
 **Scope:** E2E automation of the assignment creation flow at `https://everwrite.app.newsela.com/assignments`
 **Framework:** Playwright + TypeScript, Page Object Model
 **Approach:** Risk-based. Happy path automated end-to-end; required-field gates validated per step; deep scenario analysis on Step 3 (student prompt) as requested.
