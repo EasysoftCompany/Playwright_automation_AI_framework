@@ -1,0 +1,61 @@
+name: Claude PR Review — QE conventions
+
+# An AI agent reviewing AI-assisted tests, against human-defined conventions.
+#
+# Local/CI parity: the review criteria are NOT duplicated here. They live in
+# .claude/commands/review-tests.md, versioned with the code and invoked
+# identically in both places:
+#   local -> /review-tests
+#   CI    -> the prompt below
+# One source of truth for what "a good test" means in this repo.
+#
+# Gate pyramid: free deterministic checks first (typecheck), token-costing AI
+# review after. Same principle as the test pyramid — don't spend the expensive
+# signal on code that fails the free one.
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+jobs:
+  typecheck:
+    name: TypeScript (free gate)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npx tsc --noEmit
+
+  claude-review:
+    name: Claude semantic QE review
+    needs: typecheck
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # full history so the agent can diff against the base
+
+      - name: Review against repo conventions
+        uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          # Invokes the same slash command used locally. Review criteria live
+          # in .claude/commands/review-tests.md — edit them there, not here.
+          prompt: |
+            /review-tests the changes in this pull request
+
+            Post your findings as a single PR review comment.
+          # Least privilege: the agent may READ and ANALYZE, never write or
+          # execute. A reviewer does not need edit rights.
+          claude_args: |
+            --allowedTools "Read,Grep,Glob,Bash(git diff:*),Bash(git log:*)"
