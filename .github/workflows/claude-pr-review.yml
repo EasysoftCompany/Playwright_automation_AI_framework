@@ -51,7 +51,6 @@ jobs:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
           # Invokes the same slash command used locally. Review criteria live
           # in .claude/commands/review-tests.md — edit them there, not here.
-          show_full_output: true
           prompt: |
             /review-tests the changes in this pull request
 
@@ -59,4 +58,5 @@ jobs:
           # Least privilege: the agent may READ and ANALYZE, never write or
           # execute. A reviewer does not need edit rights.
           claude_args: |
-            --allowedTools "Read,Grep,Glob,Bash(git diff:*),Bash(git log:*)"
+            --model sonnet
+            --allowedTools "Read,Grep,Glob,Bash(git diff:*),Bash(git log:*),Bash(gh pr comment:*)"

@@ -70,7 +70,7 @@ test.describe('Step 3 — AI-generated student prompt (Luna)', () => {
     await createModal.expectPromptPrefilled();
     await createModal.appendToPrompt(` ${teacherEdit}`);
     await createModal.clickNext();
-    await createModal.backButton.click();
+    await createModal.clickBack();
 
     await createModal.expectPromptText(teacherEdit);
   });
@@ -101,7 +101,7 @@ test.describe('Step 3 — AI-generated student prompt (Luna)', () => {
 
     await createModal.replacePrompt(prompts.xssPayload);
     await createModal.clickNext();
-    await createModal.backButton.click();
+    await createModal.clickBack();
 
     // Round-trips as literal text, does not execute:
     await createModal.expectPromptText('Explain the article');
@@ -115,21 +115,24 @@ test.describe('Step 3 — AI-generated student prompt (Luna)', () => {
 
     await createModal.replacePrompt(prompts.unicode);
     await createModal.clickNext();
-    await createModal.backButton.click();
+    await createModal.clickBack();
 
     await createModal.expectPromptText('¿Cómo cambió el personaje?');
   });
 });
 
-test.describe('Login', () => {
   test('TC-06 [Medium] invalid password shows an error and does not authenticate', async ({
     loginPage,
   }) => {
+    // No fallback: an unset variable must fail loudly, not silently turn this
+    // into an invalid-USERNAME test (the app returns the same error for both).
+    const username = process.env.NEWSELA_USERNAME;
+    if (!username) {
+      throw new Error('Missing NEWSELA_USERNAME — copy .env.example to .env');
+    }
+
     await loginPage.goto();
-    await loginPage.login(
-      process.env.NEWSELA_USERNAME ?? 'qe.demo.teacher',
-      'wrong-password-123',
-    );
+    await loginPage.login(username, 'deliberately-wrong-password');
     await loginPage.expectLoginError();
+    await loginPage.expectNotAuthenticated();
   });
-});
