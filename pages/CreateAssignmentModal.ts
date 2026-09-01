@@ -60,6 +60,10 @@ export class CreateAssignmentModal {
     await this.nextButton.click();
   }
 
+    async clickBack(): Promise<void> {
+    await this.backButton.click();
+  }
+
   /**
    * Step 1 — "Newsela content source". Confirmed against real DOM: adding a
    * source article is explicitly optional ("click Next to continue without
