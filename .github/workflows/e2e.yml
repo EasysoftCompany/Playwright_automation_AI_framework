@@ -1,10 +1,33 @@
 name: E2E — Assignment Workflow
 
+# Trigger policy (deliberate — this is a PUBLIC repository):
+#
+# The suite runs against a SHARED demo environment on a third-party domain,
+# using real credentials, and each run creates real assignments with no
+# teardown path. Running it automatically on every push/PR from a public repo
+# would let anyone spam that environment and would publish run output in
+# world-readable logs.
+#
+# So:
+#   - automatic  : only on PRs targeting `main` (i.e. develop -> main),
+#                  the release gate where the signal is actually needed
+#   - on demand  : `workflow_dispatch` for any branch, including PRs to
+#                  `develop`, run by a maintainer from the Actions tab
+#
+# In a real project this suite would run against a dedicated test environment
+# with per-worker accounts and automated teardown, and could then run on
+# every push.
+
 on:
-  push:
-    branches: [main]
   pull_request:
+    branches: [main]
+    types: [opened, synchronize]
   workflow_dispatch:
+    inputs:
+      test_filter:
+        description: 'Optional -g filter (e.g. TC-01 or S3-07). Empty = full suite.'
+        required: false
+        default: ''
 
 jobs:
   e2e:
@@ -28,7 +51,14 @@ jobs:
         env:
           NEWSELA_USERNAME: ${{ secrets.NEWSELA_USERNAME }}
           NEWSELA_PASSWORD: ${{ secrets.NEWSELA_PASSWORD }}
-        run: npx playwright test
+          # Masks the captured assignment link in CI logs (see ConfirmationModal).
+          CI: 'true'
+        run: |
+          if [ -n "${{ github.event.inputs.test_filter }}" ]; then
+            npx playwright test -g "${{ github.event.inputs.test_filter }}"
+          else
+            npx playwright test
+          fi
 
       - name: Upload HTML report + traces
         if: always()
