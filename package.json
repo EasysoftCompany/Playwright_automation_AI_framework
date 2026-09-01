@@ -1,0 +1,19 @@
+{
+  "name": "newsela-qa-assessment",
+  "version": "1.0.0",
+  "description": "Playwright automation framework for the Newsela assignment creation workflow",
+  "scripts": {
+    "test": "playwright test",
+    "test:headed": "playwright test --headed",
+    "test:ui": "playwright test --ui",
+    "test:happy": "playwright test -g \"TC-01\"",
+    "report": "playwright show-report",
+    "codegen": "playwright codegen https://everwrite.app.newsela.com/assignments"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.49.0",
+    "@types/node": "^22.0.0",
+    "dotenv": "^16.4.0",
+    "typescript": "^5.6.0"
+  }
+}
