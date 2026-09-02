@@ -87,6 +87,18 @@ Same as before, amplified: this content is **authored by an AI, reviewed by a te
 | S3-04 | Apply rich formatting (bold, H1, list) to edited text | Formatting applies, persists across navigation, and "clear formatting" reverts it | Editor fidelity |
 | S3-05 | Undo after edits / after regenerate | Undo restores the previous state — can a teacher recover a prompt they liked? | Recoverability |
 | S3-06 | Type/paste hostile input into the editor (script payload, 10k chars, Unicode) | Inert as text, no freeze, round-trips intact | Stored XSS (student-facing), robustness |
+| S3-11 | Non-meaningful prompt: numbers only, special characters only, single character | App accepts, blocks, or warns — **consistently**; input is never silently discarded | Product quality: this field is the entire instruction a student receives |
+
+**Note on S3-11 — an open product question, not a defect.** The prompt field
+accepts free text, so `12345` or `!@#$%` are technically valid input. But this
+field is the complete instruction a student receives in a real classroom, and
+it also feeds the regenerate flow. Whether the product should let a teacher
+assign a meaningless prompt is a decision for Product, not an assumption for
+QA to encode. The automated test therefore **records** observed behavior and
+asserts only what is unambiguously required — the app must not crash, and must
+not silently discard the teacher's input. Once intended behavior is confirmed,
+the recording becomes a hard assertion. Automating an assertion on unconfirmed
+behavior pins an assumption, not a requirement.
 
 **Layer B — AI behavior through the UI (property-based, non-determinism-aware)**
 
