@@ -188,6 +188,29 @@ export class CreateAssignmentModal {
   }
 
   /**
+   * Reports whether the modal advanced past Step 3, without asserting either
+   * outcome. S3-11 documents observed behavior for non-meaningful prompts —
+   * the intended behavior is a product question, so the test records rather
+   * than enforces. TODO: replace with a hard assertion once Product confirms.
+   */
+  async tryAdvanceAndReport(): Promise<'advanced' | 'blocked'> {
+    const stepLabel = this.modal.getByText(/^Step \d of 5$/);
+    const before = await stepLabel.textContent();
+    if (await this.nextButton.isDisabled()) return 'blocked';
+    await this.nextButton.click();
+
+    // Real auto-retrying assertion owns the wait: it keeps retrying until the
+    // step label actually changes, so a slow transition can't be mistaken for
+    // "blocked" the way a two-tick stability poll could.
+    try {
+      await expect(stepLabel).not.toHaveText(before ?? '', { timeout: 10_000 });
+      return 'advanced';
+    } catch {
+      return 'blocked';
+    }
+  }
+
+  /**
    * Step 4 — "Assignment Configurations". Confirmed against real DOM: the
    * Rubric selector is genuinely required but arrives pre-filled with a
    * valid default ("General Purpose Literary Analysis"). The Classes

@@ -1,6 +1,6 @@
 # Test Plan — Newsela Assignment Creation Workflow
 
-**Author:** Gerardo [Last Name]
+**Author:** Gerardo Rico
 **Scope:** E2E automation of the assignment creation flow at `https://everwrite.app.newsela.com/assignments`
 **Framework:** Playwright + TypeScript, Page Object Model
 **Approach:** Risk-based. Happy path automated end-to-end; required-field gates validated per step; deep scenario analysis on Step 3 (student prompt) as requested.
@@ -87,6 +87,18 @@ Same as before, amplified: this content is **authored by an AI, reviewed by a te
 | S3-04 | Apply rich formatting (bold, H1, list) to edited text | Formatting applies, persists across navigation, and "clear formatting" reverts it | Editor fidelity |
 | S3-05 | Undo after edits / after regenerate | Undo restores the previous state — can a teacher recover a prompt they liked? | Recoverability |
 | S3-06 | Type/paste hostile input into the editor (script payload, 10k chars, Unicode) | Inert as text, no freeze, round-trips intact | Stored XSS (student-facing), robustness |
+| S3-11 | Non-meaningful prompt: numbers only, special characters only, single character | App accepts, blocks, or warns — **consistently**; input is never silently discarded | Product quality: this field is the entire instruction a student receives |
+
+**Note on S3-11 — an open product question, not a defect.** The prompt field
+accepts free text, so `12345` or `!@#$%` are technically valid input. But this
+field is the complete instruction a student receives in a real classroom, and
+it also feeds the regenerate flow. Whether the product should let a teacher
+assign a meaningless prompt is a decision for Product, not an assumption for
+QA to encode. The automated test therefore **records** observed behavior and
+asserts only what is unambiguously required — the app must not crash, and must
+not silently discard the teacher's input. Once intended behavior is confirmed,
+the recording becomes a hard assertion. Automating an assertion on unconfirmed
+behavior pins an assumption, not a requirement.
 
 **Layer B — AI behavior through the UI (property-based, non-determinism-aware)**
 
@@ -108,7 +120,7 @@ Whether the generated prompt is *good* cannot be asserted with E2E checks — an
 
 The right tooling for this layer is an **eval suite, not E2E**: a golden set of assignment-detail inputs, property checks (reading-level score, length bounds, no meta-text like "As an AI..."), and an LLM-as-judge with a calibrated rubric for appropriateness and alignment, sampled against human review. Out of scope for this time-boxed assessment, but it is the layer I would build next — E2E proves Luna *responds*; evals prove Luna is *right*.
 
-**Automation selection:** S3-01, S3-02, S3-03, S3-06 (XSS + Unicode), S3-07 and S3-10 are automated. S3-08 and S3-09 are implemented where the app's behavior/endpoints allow discovery within the time box, otherwise documented as exploratory with the defect-criteria above. S3-04/05 are exploratory (automating editor internals without knowing the intended formatting model pins assumptions).
+**Automation selection:** S3-01, S3-02, S3-03, S3-06 (XSS + Unicode), S3-07, S3-10 and S3-11 are automated. S3-08 and S3-09 are implemented where the app's behavior/endpoints allow discovery within the time box, otherwise documented as exploratory with the defect-criteria above. S3-04/05 are exploratory (automating editor internals without knowing the intended formatting model pins assumptions).
 
 ### 4.4 Technical note — automating a rich-text editor
 

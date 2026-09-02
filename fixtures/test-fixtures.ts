@@ -50,4 +50,19 @@ export const prompts = {
     '¿Cómo cambió el personaje? Explícalo con detalles. 日本語テスト — émojis: 📚✏️',
   xssPayload: '<script>alert("xss")</script> Explain the article\'s main idea.',
   longText: 'Explain your reasoning. '.repeat(500), // ~12,000 chars
+  /** Non-meaningful inputs (S3-11) — see TEST_PLAN.md §4.3 Layer A. */
+  numbersOnly: '12345',
+  specialCharsOnly: '!@#$%^&*()',
+  singleChar: 'x',
 } as const;
+
+/**
+ * S3-11 input cases — one data-driven test is generated per entry (see
+ * test_assignment-workflow_spec.ts), so a failure on one case never hides
+ * the outcome of the others.
+ */
+export const nonMeaningfulPromptCases: ReadonlyArray<{ label: string; value: string }> = [
+  { label: 'numbers only', value: prompts.numbersOnly },
+  { label: 'special characters only', value: prompts.specialCharsOnly },
+  { label: 'single character', value: prompts.singleChar },
+];
