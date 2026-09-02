@@ -110,7 +110,7 @@ test.describe('Step 3 — AI-generated student prompt (Luna)', () => {
   test('S3-06b [Medium] unicode content (accents, CJK, emoji) round-trips intact', async ({
     loggedIn, assignmentsPage, createModal,
   }) => {
-    await goToStep3({ assignmentsPage, createModal });
+    await goToStep3 ({ assignmentsPage, createModal });
     await createModal.expectPromptPrefilled();
 
     await createModal.replacePrompt(prompts.unicode);
@@ -118,6 +118,44 @@ test.describe('Step 3 — AI-generated student prompt (Luna)', () => {
     await createModal.clickBack();
 
     await createModal.expectPromptText('¿Cómo cambió el personaje?');
+  });
+
+  test('S3-11 [Medium] non-meaningful prompts — document accept/block behavior', async ({
+    loggedIn, assignmentsPage, createModal,
+  }) => {
+    const cases: Array<[string, string]> = [
+      ['numbers only', prompts.numbersOnly],
+      ['special characters only', prompts.specialCharsOnly],
+      ['single character', prompts.singleChar],
+    ];
+
+    const observed: string[] = [];
+
+    for (const [label, value] of cases) {
+      // Reset to a known state at the START of each case, so the iteration
+      // never depends on where the previous one ended up.
+      await assignmentsPage.goto();
+      await assignmentsPage.expectLoaded();
+
+      await goToStep3({ assignmentsPage, createModal });
+      await createModal.expectPromptPrefilled();
+      await createModal.replacePrompt(value);
+
+      const outcome = await createModal.tryAdvanceAndReport();
+      observed.push(`${label}: ${outcome}`);
+
+      // Whatever the app decides, it must not silently discard the input.
+      if (outcome === 'blocked') {
+        await createModal.expectPromptText(value);
+      }
+    }
+
+    console.log(`\nS3-11 observed behavior — ${observed.join(' | ')}\n`);
+
+    // Deliberately NOT asserting accept-vs-block: intended product behavior is
+    // unconfirmed (TEST_PLAN.md §4.3). What IS asserted: the app never crashes
+    // and never discards input on a blocked attempt.
+    expect(observed).toHaveLength(3);
   });
 });
 

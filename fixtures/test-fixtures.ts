@@ -50,4 +50,8 @@ export const prompts = {
     '¿Cómo cambió el personaje? Explícalo con detalles. 日本語テスト — émojis: 📚✏️',
   xssPayload: '<script>alert("xss")</script> Explain the article\'s main idea.',
   longText: 'Explain your reasoning. '.repeat(500), // ~12,000 chars
+    /** Non-meaningful inputs (S3-11) — see TEST_PLAN.md §4.3 Layer A. */
+  numbersOnly: '12345',
+  specialCharsOnly: '!@#$%^&*()',
+  singleChar: 'x',
 } as const;

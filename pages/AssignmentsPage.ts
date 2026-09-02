@@ -15,6 +15,10 @@ export class AssignmentsPage {
     this.createAssignmentButton = page.getByRole('link', { name: 'Create Assignment' });
   }
 
+    async goto(): Promise<void> {
+    await this.page.goto('/assignments');
+  }
+
   async expectLoaded(): Promise<void> {
     await expect(this.createAssignmentButton).toBeVisible();
   }

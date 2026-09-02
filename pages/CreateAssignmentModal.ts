@@ -187,6 +187,22 @@ export class CreateAssignmentModal {
     await expect(stepLabel).toHaveText(before ?? /^Step \d of 5$/);
   }
 
+    /**
+   * Reports whether the modal advanced past Step 3, without asserting either
+   * outcome. S3-11 documents observed behavior for non-meaningful prompts —
+   * the intended behavior is a product question, so the test records rather
+   * than enforces. TODO: replace with a hard assertion once Product confirms.
+   */
+  async tryAdvanceAndReport(): Promise<'advanced' | 'blocked'> {
+    if (await this.nextButton.isDisabled()) return 'blocked';
+    await this.nextButton.click();
+    // If the prompt editor is gone, we moved on to Step 4.
+    const stillOnStep3 = await this.promptEditor
+      .isVisible()
+      .catch(() => false);
+    return stillOnStep3 ? 'blocked' : 'advanced';
+  }
+
   /**
    * Step 4 — "Assignment Configurations". Confirmed against real DOM: the
    * Rubric selector is genuinely required but arrives pre-filled with a
