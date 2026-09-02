@@ -199,21 +199,15 @@ export class CreateAssignmentModal {
     if (await this.nextButton.isDisabled()) return 'blocked';
     await this.nextButton.click();
 
-    // Same auto-retrying approach as expectCannotAdvance — poll the step
-    // label until two consecutive reads agree, i.e. the app has finished
-    // transitioning, instead of taking a one-shot isVisible() snapshot that
-    // can race a React state update.
-    let last: string | null = null;
-    await expect
-      .poll(async () => {
-        const current = await stepLabel.textContent();
-        const stable = current === last;
-        last = current;
-        return stable;
-      }, { timeout: 10_000 })
-      .toBe(true);
-
-    return last === before ? 'blocked' : 'advanced';
+    // Real auto-retrying assertion owns the wait: it keeps retrying until the
+    // step label actually changes, so a slow transition can't be mistaken for
+    // "blocked" the way a two-tick stability poll could.
+    try {
+      await expect(stepLabel).not.toHaveText(before ?? '', { timeout: 10_000 });
+      return 'advanced';
+    } catch {
+      return 'blocked';
+    }
   }
 
   /**
