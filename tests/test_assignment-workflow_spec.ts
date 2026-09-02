@@ -1,4 +1,4 @@
-import { test, expect, prompts } from '../fixtures/test-fixtures';
+import { test, expect, prompts, nonMeaningfulPromptCases } from '../fixtures/test-fixtures';
 
 /**
  * Main test runner for the Newsela assignment creation workflow.
@@ -110,7 +110,7 @@ test.describe('Step 3 — AI-generated student prompt (Luna)', () => {
   test('S3-06b [Medium] unicode content (accents, CJK, emoji) round-trips intact', async ({
     loggedIn, assignmentsPage, createModal,
   }) => {
-    await goToStep3 ({ assignmentsPage, createModal });
+    await goToStep3({ assignmentsPage, createModal });
     await createModal.expectPromptPrefilled();
 
     await createModal.replacePrompt(prompts.unicode);
@@ -120,43 +120,33 @@ test.describe('Step 3 — AI-generated student prompt (Luna)', () => {
     await createModal.expectPromptText('¿Cómo cambió el personaje?');
   });
 
-  test('S3-11 [Medium] non-meaningful prompts — document accept/block behavior', async ({
-    loggedIn, assignmentsPage, createModal,
-  }) => {
-    const cases: Array<[string, string]> = [
-      ['numbers only', prompts.numbersOnly],
-      ['special characters only', prompts.specialCharsOnly],
-      ['single character', prompts.singleChar],
-    ];
-
-    const observed: string[] = [];
-
-    for (const [label, value] of cases) {
-      // Reset to a known state at the START of each case, so the iteration
-      // never depends on where the previous one ended up.
-      await assignmentsPage.goto();
-      await assignmentsPage.expectLoaded();
-
+  // Data-driven: one test per input case (fixtures/test-fixtures.ts), so a
+  // failure on one case doesn't take the others' observations down with it.
+  for (const { label, value } of nonMeaningfulPromptCases) {
+    test(`S3-11 [Medium] non-meaningful prompt (${label}) — input is never silently discarded`, async ({
+      loggedIn, assignmentsPage, createModal,
+    }) => {
       await goToStep3({ assignmentsPage, createModal });
       await createModal.expectPromptPrefilled();
       await createModal.replacePrompt(value);
 
       const outcome = await createModal.tryAdvanceAndReport();
-      observed.push(`${label}: ${outcome}`);
+      console.log(`\nS3-11 (${label}) observed behavior: ${outcome}\n`);
 
-      // Whatever the app decides, it must not silently discard the input.
+      // Deliberately NOT asserting accept-vs-block: intended product behavior
+      // is unconfirmed (TEST_PLAN.md §4.3). What IS asserted, on either
+      // branch: the app never silently discards the teacher's input.
       if (outcome === 'blocked') {
         await createModal.expectPromptText(value);
+      } else {
+        // Advanced to Step 4 — confirm the value that arrived there is the
+        // one the teacher typed, not something silently substituted/emptied
+        // (same Back-and-check approach as S3-03).
+        await createModal.clickBack();
+        await createModal.expectPromptText(value);
       }
-    }
-
-    console.log(`\nS3-11 observed behavior — ${observed.join(' | ')}\n`);
-
-    // Deliberately NOT asserting accept-vs-block: intended product behavior is
-    // unconfirmed (TEST_PLAN.md §4.3). What IS asserted: the app never crashes
-    // and never discards input on a blocked attempt.
-    expect(observed).toHaveLength(3);
-  });
+    });
+  }
 });
 
   test('TC-06 [Medium] invalid password shows an error and does not authenticate', async ({

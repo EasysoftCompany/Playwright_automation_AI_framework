@@ -120,7 +120,7 @@ Whether the generated prompt is *good* cannot be asserted with E2E checks — an
 
 The right tooling for this layer is an **eval suite, not E2E**: a golden set of assignment-detail inputs, property checks (reading-level score, length bounds, no meta-text like "As an AI..."), and an LLM-as-judge with a calibrated rubric for appropriateness and alignment, sampled against human review. Out of scope for this time-boxed assessment, but it is the layer I would build next — E2E proves Luna *responds*; evals prove Luna is *right*.
 
-**Automation selection:** S3-01, S3-02, S3-03, S3-06 (XSS + Unicode), S3-07 and S3-10 are automated. S3-08 and S3-09 are implemented where the app's behavior/endpoints allow discovery within the time box, otherwise documented as exploratory with the defect-criteria above. S3-04/05 are exploratory (automating editor internals without knowing the intended formatting model pins assumptions).
+**Automation selection:** S3-01, S3-02, S3-03, S3-06 (XSS + Unicode), S3-07, S3-10 and S3-11 are automated. S3-08 and S3-09 are implemented where the app's behavior/endpoints allow discovery within the time box, otherwise documented as exploratory with the defect-criteria above. S3-04/05 are exploratory (automating editor internals without knowing the intended formatting model pins assumptions).
 
 ### 4.4 Technical note — automating a rich-text editor
 

@@ -187,20 +187,33 @@ export class CreateAssignmentModal {
     await expect(stepLabel).toHaveText(before ?? /^Step \d of 5$/);
   }
 
-    /**
+  /**
    * Reports whether the modal advanced past Step 3, without asserting either
    * outcome. S3-11 documents observed behavior for non-meaningful prompts —
    * the intended behavior is a product question, so the test records rather
    * than enforces. TODO: replace with a hard assertion once Product confirms.
    */
   async tryAdvanceAndReport(): Promise<'advanced' | 'blocked'> {
+    const stepLabel = this.modal.getByText(/^Step \d of 5$/);
+    const before = await stepLabel.textContent();
     if (await this.nextButton.isDisabled()) return 'blocked';
     await this.nextButton.click();
-    // If the prompt editor is gone, we moved on to Step 4.
-    const stillOnStep3 = await this.promptEditor
-      .isVisible()
-      .catch(() => false);
-    return stillOnStep3 ? 'blocked' : 'advanced';
+
+    // Same auto-retrying approach as expectCannotAdvance — poll the step
+    // label until two consecutive reads agree, i.e. the app has finished
+    // transitioning, instead of taking a one-shot isVisible() snapshot that
+    // can race a React state update.
+    let last: string | null = null;
+    await expect
+      .poll(async () => {
+        const current = await stepLabel.textContent();
+        const stable = current === last;
+        last = current;
+        return stable;
+      }, { timeout: 10_000 })
+      .toBe(true);
+
+    return last === before ? 'blocked' : 'advanced';
   }
 
   /**
